@@ -1,7 +1,8 @@
 package com.example.skylyrics.client;
 
 import com.example.skylyrics.Config;
-import com.example.skylyrics.NowPlaying;
+import com.example.skylyrics.Lyrics;
+import com.example.skylyrics.MediaSession;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -20,20 +21,20 @@ public class SkyLyricsClient implements ClientModInitializer {
     public void onInitializeClient() {
         Config.load();
 
-        // NOTE: the KeyBinding constructor changed in recent versions (it takes a Category object).
-        // If this line fails to compile, check the 1.21.11 Yarn signature for KeyBinding.
         KeyBinding.Category category = KeyBinding.Category.create(Identifier.of(MOD_ID, "main"));
         openMenu = KeyBindingHelper.registerKeyBinding(
                 new KeyBinding("key.skylyrics.menu", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_J, category));
 
+        MediaSession.start();
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (openMenu.wasPressed()) client.setScreen(new SettingsScreen());
-            NowPlaying.tick();
+            Lyrics.tick();
         });
 
         HudElementRegistry.attachElementAfter(
-                VanillaHudElements.CHAT,
-                Identifier.of(MOD_ID, "now_playing"),
-                NowPlayingHud::render);
+                VanillaHudElements.CHAT, Identifier.of(MOD_ID, "now_playing"), NowPlayingHud::render);
+        HudElementRegistry.attachElementAfter(
+                VanillaHudElements.CHAT, Identifier.of(MOD_ID, "lyrics"), LyricsHud::render);
     }
 }

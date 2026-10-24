@@ -15,12 +15,14 @@ public class Config {
 
     // Display
     public boolean showOverlay = true;
-    public boolean showClock = true;
     public boolean showSpectrum = true;
+    /** 0 = top-left, 1 = top-right, 2 = bottom-left, 3 = bottom-right */
+    public int cardCorner = 0;
     // Lyrics
     public boolean showLyrics = true;
-    public boolean lyricsPulse = true;
-    public float lyricsSize = 1.0f;
+    public boolean showContext = true;
+    public float lyricsSize = 1.5f;
+    public int lyricsOffsetMs = 0;
     public int accentColor = 0xFF8AB4F8;
 
     public static void load() {

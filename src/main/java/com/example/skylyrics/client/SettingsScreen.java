@@ -1,6 +1,7 @@
 package com.example.skylyrics.client;
 
 import com.example.skylyrics.Config;
+import com.example.skylyrics.Lyrics;
 import com.example.skylyrics.NowPlaying;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -34,21 +35,33 @@ public class SettingsScreen extends Screen {
         switch (current) {
             case LYRICS -> {
                 toggle(cx, cy, cw, "Show lyrics", () -> c.showLyrics, v -> c.showLyrics = v);
-                toggle(cx, cy + 24, cw, "Pulse on the beat", () -> c.lyricsPulse, v -> c.lyricsPulse = v);
-                addDrawableChild(ButtonWidget.builder(Text.literal("Lyrics size: " + c.lyricsSize + "x"), b -> {
-                    c.lyricsSize = c.lyricsSize >= 2.0f ? 0.5f : c.lyricsSize + 0.25f;
+                toggle(cx, cy + 24, cw, "Previous/next lines", () -> c.showContext, v -> c.showContext = v);
+                addDrawableChild(ButtonWidget.builder(Text.literal("Lyrics size: " + String.format("%.2f", c.lyricsSize) + "x"), b -> {
+                    c.lyricsSize = c.lyricsSize >= 3.0f ? 0.75f : c.lyricsSize + 0.25f;
                     clearAndInit();
                 }).dimensions(cx, cy + 48, cw, 20).build());
+                int half = cw / 2 - 2;
+                addDrawableChild(ButtonWidget.builder(Text.literal("Earlier -0.25s"), b -> {
+                    c.lyricsOffsetMs -= 250; clearAndInit();
+                }).dimensions(cx, cy + 72, half, 20).build());
+                addDrawableChild(ButtonWidget.builder(Text.literal("Later +0.25s"), b -> {
+                    c.lyricsOffsetMs += 250; clearAndInit();
+                }).dimensions(cx + half + 4, cy + 72, half, 20).build());
+                addDrawableChild(ButtonWidget.builder(
+                        Text.literal(String.format("Timing offset: %.2fs (click to reset)", c.lyricsOffsetMs / 1000.0)), b -> {
+                            c.lyricsOffsetMs = 0; clearAndInit();
+                        }).dimensions(cx, cy + 96, cw, 20).build());
             }
             case DISPLAY -> {
                 toggle(cx, cy, cw, "Now-playing card", () -> c.showOverlay, v -> c.showOverlay = v);
-                toggle(cx, cy + 24, cw, "Spectrum bars", () -> c.showSpectrum, v -> c.showSpectrum = v);
-                toggle(cx, cy + 48, cw, "Clock", () -> c.showClock, v -> c.showClock = v);
+                toggle(cx, cy + 24, cw, "Decorative bars", () -> c.showSpectrum, v -> c.showSpectrum = v);
+                addDrawableChild(ButtonWidget.builder(
+                        Text.literal("Card position: " + NowPlayingHud.CORNERS[Math.floorMod(c.cardCorner, 4)]), b -> {
+                            c.cardCorner = (c.cardCorner + 1) % 4; clearAndInit();
+                        }).dimensions(cx, cy + 48, cw, 20).build());
             }
-            case PLAYER -> addDrawableChild(ButtonWidget.builder(
-                    Text.literal(NowPlaying.playing ? "Pause" : "Play"), b -> {
-                        NowPlaying.togglePlay(); clearAndInit();
-                    }).dimensions(cx, cy, cw, 20).build());
+            case PLAYER -> addDrawableChild(ButtonWidget.builder(Text.literal("Reload lyrics"), b -> Lyrics.reload())
+                    .dimensions(cx, cy + 60, cw, 20).build());
         }
     }
 
@@ -62,8 +75,21 @@ public class SettingsScreen extends Screen {
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         super.render(ctx, mouseX, mouseY, delta);
-        // TODO stage 2: draw a styled dark panel behind the widgets (needs renderBackground override).
-        ctx.drawCenteredTextWithShadow(textRenderer, title, width / 2, (height - PH) / 2 + 10, 0xFFFFFFFF);
+        int top = (height - PH) / 2, left = (width - PW) / 2;
+        ctx.drawCenteredTextWithShadow(textRenderer, title, width / 2, top + 10, 0xFFFFFFFF);
+        if (current == Tab.PLAYER) {
+            int x = left + 90, y = top + 30;
+            NowPlaying.Snap s = NowPlaying.snap;
+            if (s == null) {
+                ctx.drawTextWithShadow(textRenderer, "Nothing playing", x, y, 0xFFFFFFFF);
+                ctx.drawTextWithShadow(textRenderer, textRenderer.trimToWidth(NowPlaying.status, PW - 100), x, y + 12, 0xFFAAAAAA);
+            } else {
+                ctx.drawTextWithShadow(textRenderer, textRenderer.trimToWidth(s.title(), PW - 100), x, y, 0xFFFFFFFF);
+                ctx.drawTextWithShadow(textRenderer, textRenderer.trimToWidth(s.artist(), PW - 100), x, y + 12, 0xFFAAAAAA);
+                String ls = Lyrics.lines.isEmpty() ? Lyrics.status : Lyrics.lines.size() + " lyric lines loaded";
+                ctx.drawTextWithShadow(textRenderer, textRenderer.trimToWidth(ls, PW - 100), x, y + 30, 0xFF8AB4F8);
+            }
+        }
     }
 
     @Override

@@ -7,13 +7,15 @@ Fabric, Minecraft 1.21.11. Client-only.
 2. Add the Gradle wrapper: run `gradle wrapper` once (or copy gradlew + gradle/ from the Fabric template).
 3. `./gradlew build` -> jar in build/libs/. Or `./gradlew runClient` to test.
 
-## What works
-- Now-playing card (art placeholder, title, artist, progress, spectrum) with a demo track
-- J opens a tabbed settings menu (Lyrics / Display / Player); settings save to config/skylyrics.json
+## What works (stage 2)
+- Reads the song playing in Windows (Spotify etc.) - Windows only, no login needed
+- Now-playing card with real title, artist and progress; choose a corner in the Display tab
+- Synced lyrics from LRCLIB shown on screen, with size and timing-offset controls
+- J opens the menu; settings save to config/skylyrics.json
 
 ## Not built yet
-- Real music source (Spotify login or OS media session)
-- Synced lyrics and the 3D sky lyrics renderer
+- Album art, real audio spectrum
+- Lyrics floating in the 3D sky
 - Custom skies, hats/cosmetics, death animations, saved lines
 
 ## Build with no install (GitHub)
