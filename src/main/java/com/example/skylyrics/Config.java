@@ -21,6 +21,8 @@ public class Config {
     // Lyrics
     public boolean showLyrics = true;
     public boolean showContext = true;
+    /** 0 = Sky (pinned in the world), 1 = Screen (fixed on the HUD) */
+    public int lyricsStyle = 0;
     public float lyricsSize = 1.5f;
     public int lyricsOffsetMs = 0;
     public int accentColor = 0xFF8AB4F8;

@@ -31,6 +31,10 @@ public class LyricsHud {
         }
 
         long pos = NowPlaying.positionMs() + c.lyricsOffsetMs;
+        if (c.lyricsStyle == 0) {
+            SkyLyricsHud.render(ctx, tr, ls, pos, c);
+            return;
+        }
         int idx = Lyrics.indexAt(ls, pos);
         float size = c.lyricsSize;
 
@@ -50,7 +54,7 @@ public class LyricsHud {
         }
     }
 
-    private static void drawScaled(DrawContext ctx, TextRenderer tr, String text, int cx, int y, float scale, int argb) {
+    static void drawScaled(DrawContext ctx, TextRenderer tr, String text, int cx, int y, float scale, int argb) {
         int w = Math.max(1, tr.getWidth(text));
         float maxW = ctx.getScaledWindowWidth() * 0.8f;
         float s = Math.min(scale, maxW / w);

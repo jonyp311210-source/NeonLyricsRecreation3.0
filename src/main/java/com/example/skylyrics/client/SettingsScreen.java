@@ -35,11 +35,15 @@ public class SettingsScreen extends Screen {
         switch (current) {
             case LYRICS -> {
                 toggle(cx, cy, cw, "Show lyrics", () -> c.showLyrics, v -> c.showLyrics = v);
-                toggle(cx, cy + 24, cw, "Previous/next lines", () -> c.showContext, v -> c.showContext = v);
-                addDrawableChild(ButtonWidget.builder(Text.literal("Lyrics size: " + String.format("%.2f", c.lyricsSize) + "x"), b -> {
-                    c.lyricsSize = c.lyricsSize >= 3.0f ? 0.75f : c.lyricsSize + 0.25f;
-                    clearAndInit();
-                }).dimensions(cx, cy + 48, cw, 20).build());
+                addDrawableChild(ButtonWidget.builder(
+                        Text.literal("Lyrics style: " + (c.lyricsStyle == 0 ? "Sky" : "Screen")), b -> {
+                            c.lyricsStyle = c.lyricsStyle == 0 ? 1 : 0; clearAndInit();
+                        }).dimensions(cx, cy + 24, cw, 20).build());
+                if (c.lyricsStyle == 1)
+                    toggle(cx, cy + 48, cw, "Previous/next lines", () -> c.showContext, v -> c.showContext = v);
+                else
+                    addDrawableChild(ButtonWidget.builder(Text.literal("(Sky style: line stays where you looked)"), b -> {})
+                            .dimensions(cx, cy + 48, cw, 20).build()).active = false;
                 int half = cw / 2 - 2;
                 addDrawableChild(ButtonWidget.builder(Text.literal("Earlier -0.25s"), b -> {
                     c.lyricsOffsetMs -= 250; clearAndInit();
