@@ -17,6 +17,8 @@ public class SettingsScreen extends Screen {
         final String label; Tab(String l) { label = l; } }
 
     private static Tab current = Tab.LYRICS;
+    private static final String[] MODES = {"Follow", "Sky", "Screen"};
+    private static final String[] SMOOTH = {"Snappy", "Smooth", "Floaty"};
     private static final int PW = 300, PH = 215;
 
     public SettingsScreen() { super(Text.literal("SkyLyrics")); }
@@ -36,10 +38,15 @@ public class SettingsScreen extends Screen {
             case LYRICS -> {
                 toggle(cx, cy, cw, "Show lyrics", () -> c.showLyrics, v -> c.showLyrics = v);
                 addDrawableChild(ButtonWidget.builder(
-                        Text.literal("Lyrics style: " + (c.lyricsStyle == 0 ? "Sky" : "Screen")), b -> {
-                            c.lyricsStyle = c.lyricsStyle == 0 ? 1 : 0; clearAndInit();
+                        Text.literal("Lyrics mode: " + MODES[Math.floorMod(c.lyricsMode, 3)]), b -> {
+                            c.lyricsMode = (c.lyricsMode + 1) % 3; clearAndInit();
                         }).dimensions(cx, cy + 24, cw, 20).build());
-                if (c.lyricsStyle == 0)
+                if (c.lyricsMode == 0)
+                    addDrawableChild(ButtonWidget.builder(
+                            Text.literal("Follow smoothness: " + SMOOTH[Math.floorMod(c.followSmooth, 3)]), b -> {
+                                c.followSmooth = (c.followSmooth + 1) % 3; clearAndInit();
+                            }).dimensions(cx, cy + 48, cw, 20).build());
+                else if (c.lyricsMode == 1)
                     toggle(cx, cy + 48, cw, "Keep center clear", () -> c.keepCenterClear, v -> c.keepCenterClear = v);
                 else
                     toggle(cx, cy + 48, cw, "Previous/next lines", () -> c.showContext, v -> c.showContext = v);

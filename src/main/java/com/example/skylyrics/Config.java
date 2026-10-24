@@ -21,8 +21,10 @@ public class Config {
     // Lyrics
     public boolean showLyrics = true;
     public boolean showContext = true;
-    /** 0 = Sky (pinned in the world), 1 = Screen (fixed on the HUD) */
-    public int lyricsStyle = 0;
+    /** 0 = Follow (glides after where you look), 1 = Sky (pinned in the world), 2 = Screen (fixed on the HUD) */
+    public int lyricsMode = 0;
+    /** Follow mode: 0 = snappy, 1 = smooth, 2 = floaty */
+    public int followSmooth = 1;
     /** 0.2 - 1.0 : overall lyrics opacity */
     public float lyricsOpacity = 0.7f;
     /** Sky style: fade lyrics out near the middle of the screen so they never cover what you aim at */

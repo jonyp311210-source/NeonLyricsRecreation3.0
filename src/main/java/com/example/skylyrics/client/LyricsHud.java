@@ -31,7 +31,7 @@ public class LyricsHud {
         }
 
         long pos = NowPlaying.positionMs() + c.lyricsOffsetMs;
-        if (c.lyricsStyle == 0) {
+        if (c.lyricsMode != 2) {
             SkyLyricsHud.render(ctx, tr, ls, pos, c);
             return;
         }

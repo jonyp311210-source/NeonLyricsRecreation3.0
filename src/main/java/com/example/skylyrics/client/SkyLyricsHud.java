@@ -13,11 +13,11 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * "Sky" lyrics: each new line is pinned to a fixed direction in the sky, above where you were looking
- * when it started. Turn your head and it slides across the screen like it is really up there.
- * Lines fade out smoothly when they get near the middle of the screen (if "Keep center clear" is on),
- * so they never cover the crosshair or an opponent.
- * (This projects a direction onto the screen, so it is drawn over the world, not behind terrain.)
+ * Two world-style lyric modes sharing one projection:
+ *  - Follow: the lyrics float above your crosshair and glide after wherever you look (with a little lag
+ *    so it feels smooth, not stuck to the screen).
+ *  - Sky: each new line is pinned in the sky where you were looking, and slides as you turn.
+ * Both draw over the world (not behind terrain) and stay out of the middle of the screen.
  */
 public class SkyLyricsHud {
     private static class Bubble {
@@ -28,18 +28,29 @@ public class SkyLyricsHud {
     }
 
     private static final long FADE_OUT_MS = 2500;
+    private static final double[] TAU = {0.05, 0.12, 0.25}; // follow smoothing time (seconds)
     private static final List<Bubble> bubbles = new ArrayList<>();
     private static int lastIdx = -2;
     private static String lastKey = "";
+
+    // smoothed view direction for Follow mode
+    private static double anchorYaw, anchorPitch;
+    private static long lastFrameNs = 0;
 
     private static float smooth(double e0, double e1, double x) {
         double t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0)));
         return (float) (t * t * (3 - 2 * t));
     }
 
+    private static double wrap(double d) {
+        d = ((d + 540.0) % 360.0 + 360.0) % 360.0 - 180.0;
+        return d;
+    }
+
     static void render(DrawContext ctx, TextRenderer tr, List<Lyrics.Line> ls, long pos, Config c) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.player == null) return;
+        boolean follow = c.lyricsMode == 0;
 
         NowPlaying.Snap snap = NowPlaying.snap;
         String key = snap == null ? "" : snap.title() + "|" + snap.artist();
@@ -56,8 +67,25 @@ public class SkyLyricsHud {
         double tanHalf = Math.tan(Math.toRadians(mc.options.getFov().getValue()) / 2.0);
 
         long now = System.currentTimeMillis();
-        int idx = Lyrics.indexAt(ls, pos);
+        long ns = System.nanoTime();
 
+        // Follow mode: glide the anchor toward where the camera is looking
+        if (follow) {
+            double dt = (ns - lastFrameNs) / 1e9;
+            lastFrameNs = ns;
+            if (dt > 0.5 || dt <= 0) {
+                anchorYaw = camYaw;
+                anchorPitch = camPitch;
+            } else {
+                double a = 1.0 - Math.exp(-dt / TAU[Math.floorMod(c.followSmooth, 3)]);
+                anchorYaw += wrap(camYaw - anchorYaw) * a;
+                anchorPitch += (camPitch - anchorPitch) * a;
+            }
+        } else {
+            lastFrameNs = 0;
+        }
+
+        int idx = Lyrics.indexAt(ls, pos);
         if (idx != lastIdx) {
             lastIdx = idx;
             for (Bubble b : bubbles) if (b.end == 0) b.end = now;
@@ -66,7 +94,6 @@ public class SkyLyricsHud {
                 Bubble b = new Bubble();
                 b.text = ls.get(idx).text();
                 b.start = now;
-                // place the line well above where you are looking (about 68% of the way to the top of the screen)
                 double offDeg = Math.toDegrees(Math.atan(0.68 * tanHalf));
                 b.yaw = camYaw + (float) r.nextDouble(-14, 14);
                 b.pitch = (float) Math.max(-85, Math.min(-15, camPitch - offDeg + r.nextDouble(-2, 2)));
@@ -82,12 +109,19 @@ public class SkyLyricsHud {
         double rx = -Math.cos(yr), rz = -Math.sin(yr);
         double ux = -rz * fy, uy = rz * fx - rx * fz, uz = rx * fy;
         double aspect = (double) sw / sh;
-        float scale = c.lyricsSize * 1.3f;
+        float scale = c.lyricsSize * (follow ? 1.2f : 1.3f);
+
+        // Follow mode sits this far up the screen (0 = middle, 1 = top edge)
+        double followNy = 0.62;
+        double followOffDeg = Math.toDegrees(Math.atan(followNy * tanHalf));
 
         for (Bubble b : bubbles) {
             float t = b.end == 0 ? 0f : (now - b.end) / (float) FADE_OUT_MS;
             float te = smooth(0, 1, t);
-            double by = Math.toRadians(b.yaw), bp = Math.toRadians(b.pitch - 6f * te);
+
+            double yawDeg = follow ? anchorYaw : b.yaw;
+            double pitchDeg = follow ? anchorPitch - followOffDeg : b.pitch - 6f * te;
+            double by = Math.toRadians(yawDeg), bp = Math.toRadians(pitchDeg);
             double dx = -Math.sin(by) * Math.cos(bp), dy = -Math.sin(bp), dz = Math.cos(by) * Math.cos(bp);
             double depth = dx * fx + dy * fy + dz * fz;
             if (depth < 0.05) continue;
@@ -97,9 +131,8 @@ public class SkyLyricsHud {
 
             float fit = LyricsHud.fitScale(ctx, tr, b.text, scale);
 
-            // keep the middle of the screen clear: fade out smoothly near the crosshair
             float vis = 1f;
-            if (c.keepCenterClear) {
+            if (!follow && c.keepCenterClear) {
                 double halfW = tr.getWidth(b.text) * fit / sw; // half text width in -1..1 units
                 double ex = Math.max(0, Math.abs(nx) - halfW);
                 double r = Math.hypot(ex / 0.20, Math.abs(ny) / 0.45);
@@ -114,6 +147,7 @@ public class SkyLyricsHud {
 
             float sx = (float) (sw / 2.0 * (1 + nx));
             float sy = (float) (sh / 2.0 * (1 - ny));
+            if (follow) sy -= 20f * scale * te; // old line rises as it fades
             LyricsHud.drawScaled(ctx, tr, b.text, sx, sy, scale, color);
         }
     }
