@@ -54,14 +54,24 @@ public class LyricsHud {
         }
     }
 
-    static void drawScaled(DrawContext ctx, TextRenderer tr, String text, int cx, int y, float scale, int argb) {
+    static float fitScale(DrawContext ctx, TextRenderer tr, String text, float scale) {
         int w = Math.max(1, tr.getWidth(text));
         float maxW = ctx.getScaledWindowWidth() * 0.8f;
-        float s = Math.min(scale, maxW / w);
+        return Math.min(scale, maxW / w);
+    }
+
+    /** Draws centred text at a fractional position (smooth movement). Applies the opacity setting. */
+    static void drawScaled(DrawContext ctx, TextRenderer tr, String text, float cx, float y, float scale, int argb) {
+        int a = (int) (((argb >>> 24) & 0xFF) * Config.I.lyricsOpacity);
+        if (a < 8) return; // very low alpha would be drawn fully opaque
+        int color = (a << 24) | (argb & 0xFFFFFF);
+        int w = Math.max(1, tr.getWidth(text));
+        float s = fitScale(ctx, tr, text, scale);
         ctx.getMatrices().pushMatrix();
-        ctx.getMatrices().translate((float) cx, (float) y);
+        ctx.getMatrices().translate(cx, y);
         ctx.getMatrices().scale(s, s);
-        ctx.drawTextWithShadow(tr, text, -w / 2, 0, argb);
+        ctx.getMatrices().translate(-w / 2f, 0f);
+        ctx.drawTextWithShadow(tr, text, 0, 0, color);
         ctx.getMatrices().popMatrix();
     }
 }

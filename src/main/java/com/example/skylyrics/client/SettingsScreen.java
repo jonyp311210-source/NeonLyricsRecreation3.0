@@ -17,7 +17,7 @@ public class SettingsScreen extends Screen {
         final String label; Tab(String l) { label = l; } }
 
     private static Tab current = Tab.LYRICS;
-    private static final int PW = 300, PH = 190;
+    private static final int PW = 300, PH = 215;
 
     public SettingsScreen() { super(Text.literal("SkyLyrics")); }
 
@@ -39,22 +39,29 @@ public class SettingsScreen extends Screen {
                         Text.literal("Lyrics style: " + (c.lyricsStyle == 0 ? "Sky" : "Screen")), b -> {
                             c.lyricsStyle = c.lyricsStyle == 0 ? 1 : 0; clearAndInit();
                         }).dimensions(cx, cy + 24, cw, 20).build());
-                if (c.lyricsStyle == 1)
-                    toggle(cx, cy + 48, cw, "Previous/next lines", () -> c.showContext, v -> c.showContext = v);
+                if (c.lyricsStyle == 0)
+                    toggle(cx, cy + 48, cw, "Keep center clear", () -> c.keepCenterClear, v -> c.keepCenterClear = v);
                 else
-                    addDrawableChild(ButtonWidget.builder(Text.literal("(Sky style: line stays where you looked)"), b -> {})
-                            .dimensions(cx, cy + 48, cw, 20).build()).active = false;
+                    toggle(cx, cy + 48, cw, "Previous/next lines", () -> c.showContext, v -> c.showContext = v);
+                addDrawableChild(ButtonWidget.builder(Text.literal("Lyrics size: " + String.format("%.2f", c.lyricsSize) + "x"), b -> {
+                    c.lyricsSize = c.lyricsSize >= 3.0f ? 0.75f : c.lyricsSize + 0.25f;
+                    clearAndInit();
+                }).dimensions(cx, cy + 72, cw, 20).build());
+                addDrawableChild(ButtonWidget.builder(Text.literal("Opacity: " + Math.round(c.lyricsOpacity * 100) + "%"), b -> {
+                    c.lyricsOpacity = c.lyricsOpacity >= 0.99f ? 0.2f : Math.min(1.0f, c.lyricsOpacity + 0.1f);
+                    clearAndInit();
+                }).dimensions(cx, cy + 96, cw, 20).build());
                 int half = cw / 2 - 2;
                 addDrawableChild(ButtonWidget.builder(Text.literal("Earlier -0.25s"), b -> {
                     c.lyricsOffsetMs -= 250; clearAndInit();
-                }).dimensions(cx, cy + 72, half, 20).build());
+                }).dimensions(cx, cy + 120, half, 20).build());
                 addDrawableChild(ButtonWidget.builder(Text.literal("Later +0.25s"), b -> {
                     c.lyricsOffsetMs += 250; clearAndInit();
-                }).dimensions(cx + half + 4, cy + 72, half, 20).build());
+                }).dimensions(cx + half + 4, cy + 120, half, 20).build());
                 addDrawableChild(ButtonWidget.builder(
                         Text.literal(String.format("Timing offset: %.2fs (click to reset)", c.lyricsOffsetMs / 1000.0)), b -> {
                             c.lyricsOffsetMs = 0; clearAndInit();
-                        }).dimensions(cx, cy + 96, cw, 20).build());
+                        }).dimensions(cx, cy + 144, cw, 20).build());
             }
             case DISPLAY -> {
                 toggle(cx, cy, cw, "Now-playing card", () -> c.showOverlay, v -> c.showOverlay = v);

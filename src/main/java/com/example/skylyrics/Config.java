@@ -23,6 +23,10 @@ public class Config {
     public boolean showContext = true;
     /** 0 = Sky (pinned in the world), 1 = Screen (fixed on the HUD) */
     public int lyricsStyle = 0;
+    /** 0.2 - 1.0 : overall lyrics opacity */
+    public float lyricsOpacity = 0.7f;
+    /** Sky style: fade lyrics out near the middle of the screen so they never cover what you aim at */
+    public boolean keepCenterClear = true;
     public float lyricsSize = 1.5f;
     public int lyricsOffsetMs = 0;
     public int accentColor = 0xFF8AB4F8;
