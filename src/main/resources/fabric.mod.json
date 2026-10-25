@@ -3,12 +3,9 @@
   "id": "skylyrics",
   "version": "${version}",
   "name": "SkyLyrics",
-  "description": "Beautiful floating lyrics with word-by-word highlighting, sky mode, and a modern settings menu. Inspired by Spotify-style karaoke bars.",
+  "description": "Beautiful floating karaoke lyrics bar with word-by-word highlighting.",
   "authors": ["you"],
-  "contact": {
-    "homepage": "https://github.com/yourname/skylyrics",
-    "sources": "https://github.com/yourname/skylyrics"
-  },
+  "contact": {},
   "license": "MIT",
   "icon": "assets/skylyrics/icon.png",
   "environment": "client",
@@ -22,8 +19,5 @@
     "minecraft": "~1.21.1",
     "java": ">=21",
     "fabric-api": "*"
-  },
-  "suggests": {
-    "another-mod": "*"
   }
 }

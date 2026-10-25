@@ -12,7 +12,6 @@ public class Config {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("skylyrics.json");
     public static Config I = new Config();
 
-    // Core
     public boolean showOverlay = true;
     public boolean showSpectrum = true;
     public int cardCorner = 0;
@@ -24,14 +23,13 @@ public class Config {
     public boolean keepCenterClear = true;
     public float lyricsSize = 1.4f;
     public int lyricsOffsetMs = 0;
-    public int accentColor = 0xFF9B5DE5;   // nice purple matching the screenshot
+    public int accentColor = 0xFF9B5DE5;
 
-    // New features
-    public boolean splitLyrics = false;     // left / right split
+    public boolean splitLyrics = false;
     public int lyricsAlign = 0;             // 0=Center, 1=Left, 2=Right
-    public float lyricsY = 0.78f;           // vertical position (bottom-ish like the image)
-    public boolean fadePrevious = true;     // previous lines fade out
-    public int wordRevealMode = 0;          // 0 = Progressive (one after another), 1 = Whole line (wait)
+    public float lyricsY = 0.78f;
+    public boolean fadePrevious = true;
+    public int wordRevealMode = 0;          // 0 = Progressive, 1 = Whole line
     public boolean showSongTitleIntro = true;
     public boolean glowEnabled = true;
 
