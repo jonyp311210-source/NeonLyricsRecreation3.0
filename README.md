@@ -51,13 +51,3 @@ The built jar will be in `build/libs/skylyrics-0.6.0.jar`.
 ## License
 
 MIT
-
-
-## Lyrics display options
-
-Open the SkyLyrics menu with **J** (or use the keybind settings) to adjust the display.
-The Lyrics tab includes split left/right lyrics, left/center/right alignment, vertical
-position, size, opacity, timing offset, word reveal style, and a toggle for whether
-previous lines are dimmed. Split mode divides the active lyric into left and right
-halves, each in its own bar. Previous-line visibility is controlled by "Show previous /
-next"; "Previous lines fade out" controls whether the previous line is dim or brighter.

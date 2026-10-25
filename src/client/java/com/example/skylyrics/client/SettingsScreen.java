@@ -21,7 +21,7 @@ public class SettingsScreen extends Screen {
     private static final String[] WORD_MODE  = {"Progressive (1 by 1)", "Whole line (wait)"};
 
     private static final int PANEL_W = 360;
-    private static final int PANEL_H = 370;
+    private static final int PANEL_H = 280;
 
     public SettingsScreen() {
         super(Text.literal("SkyLyrics"));

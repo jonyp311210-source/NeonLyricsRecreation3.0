@@ -57,13 +57,6 @@ public class LyricsHud {
         float size = c.lyricsSize;
         float barY = sh * c.lyricsY;
 
-        // True split mode: split the current lyric into two readable halves,
-        // anchored on the left and right sides instead of merely moving one bar.
-        if (c.splitLyrics) {
-            renderSplitLyrics(ctx, tr, ls, idx, cur, c, sw, sh, size, barY);
-            return;
-        }
-
         // Build the display text with word highlighting
         int activeWord = Lyrics.wordIndexAt(cur, pos);
         List<Lyrics.Word> words = cur.words();
@@ -85,12 +78,17 @@ public class LyricsHud {
         int barW = totalWidth + padX * 2 + 40; // extra space for progress dots
         int barH = (int) (tr.fontHeight * scale) + padY * 2;
 
-        // Horizontal position based on alignment.
-        float barX = switch (c.lyricsAlign) {
-            case 1 -> sw * 0.08f + barW / 2f;
-            case 2 -> sw * 0.92f - barW / 2f;
-            default -> sw / 2f;
-        };
+        // Horizontal position based on align / split
+        float barX;
+        if (c.splitLyrics) {
+            barX = sw * 0.55f; // slightly right
+        } else {
+            barX = switch (c.lyricsAlign) {
+                case 1 -> sw * 0.08f + barW / 2f;
+                case 2 -> sw * 0.92f - barW / 2f;
+                default -> sw / 2f;
+            };
+        }
 
         int left = (int) (barX - barW / 2f);
         int top  = (int) (barY - barH / 2f);
@@ -156,71 +154,14 @@ public class LyricsHud {
         }
 
         // Optional previous line above (faded)
-        if (c.showContext && idx > 0) {
+        if (c.showContext && idx > 0 && c.fadePrevious) {
             Lyrics.Line prev = ls.get(idx - 1);
             if (!prev.text().isEmpty()) {
                 float prevY = top - 22 * size;
-                int prevColor = c.fadePrevious ? 0x55FFFFFF : 0xCCFFFFFF;
+                int prevColor = 0x55FFFFFF;
                 drawCentered(ctx, tr, prev.text(), barX, prevY, size * 0.7f, prevColor);
             }
         }
-    }
-
-    private static void renderSplitLyrics(DrawContext ctx, TextRenderer tr,
-                                          List<Lyrics.Line> ls, int idx, Lyrics.Line cur,
-                                          Config c, int sw, int sh, float size, float barY) {
-        String[] parts = cur.text().trim().split("\\s+");
-        if (parts.length == 0) return;
-        int midpoint = Math.max(1, (parts.length + 1) / 2);
-        StringBuilder leftText = new StringBuilder();
-        StringBuilder rightText = new StringBuilder();
-        for (int i = 0; i < parts.length; i++) {
-            StringBuilder target = i < midpoint ? leftText : rightText;
-            if (target.length() > 0) target.append(' ');
-            target.append(parts[i]);
-        }
-
-        float halfWidth = sw * 0.43f;
-        float scale = size * 0.88f;
-        float leftScale = Math.min(scale, halfWidth / Math.max(1, tr.getWidth(leftText.toString())));
-        float rightScale = rightText.length() == 0 ? scale
-                : Math.min(scale, halfWidth / Math.max(1, tr.getWidth(rightText.toString())));
-        int barH = Math.max(24, (int) (tr.fontHeight * scale) + 18);
-        drawSplitPiece(ctx, tr, leftText.toString(), sw * 0.25f, barY, leftScale, barH, c);
-        if (rightText.length() > 0) {
-            drawSplitPiece(ctx, tr, rightText.toString(), sw * 0.75f, barY, rightScale, barH, c);
-        }
-
-        if (c.showContext && idx > 0) {
-            String previous = ls.get(idx - 1).text();
-            if (!previous.isEmpty()) {
-                int color = c.fadePrevious ? 0x55FFFFFF : 0xCCFFFFFF;
-                drawCentered(ctx, tr, previous, sw * 0.5f, barY - barH * 0.8f,
-                        size * 0.58f, color);
-            }
-        }
-    }
-
-    private static void drawSplitPiece(DrawContext ctx, TextRenderer tr, String text,
-                                       float centerX, float centerY, float scale,
-                                       int barH, Config c) {
-        int textW = (int) (tr.getWidth(text) * scale);
-        int barW = Math.min(textW + 28, (int) (MinecraftClient.getInstance().getWindow().getScaledWidth() * 0.46));
-        int left = (int) (centerX - barW / 2f);
-        int top = (int) (centerY - barH / 2f);
-        drawRoundedRect(ctx, left, top, left + barW, top + barH, 12, 0xE01A1A1E);
-        if (c.glowEnabled) {
-            int glow = (c.accentColor & 0x00FFFFFF) | 0x22000000;
-            drawRoundedRect(ctx, left - 1, top - 1, left + barW + 1, top + barH + 1, 13, glow);
-        }
-        int color = (Math.max(0, Math.min(255, (int) (c.lyricsOpacity * 255))) << 24)
-                | (c.accentColor & 0x00FFFFFF);
-        ctx.getMatrices().push();
-        ctx.getMatrices().translate(centerX, top + (barH - tr.fontHeight * scale) / 2f, 0);
-        ctx.getMatrices().scale(scale, scale, 1);
-        ctx.getMatrices().translate(-tr.getWidth(text) / 2f, 0, 0);
-        ctx.drawText(tr, text, 0, 0, color, false);
-        ctx.getMatrices().pop();
     }
 
     private static void drawRoundedRect(DrawContext ctx, int x1, int y1, int x2, int y2, int r, int color) {
