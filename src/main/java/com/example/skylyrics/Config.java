@@ -7,40 +7,48 @@ import net.fabricmc.loader.api.FabricLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Simple JSON config stored in .minecraft/config/skylyrics.json */
 public class Config {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("skylyrics.json");
     public static Config I = new Config();
 
-    // Display
+    // Core
     public boolean showOverlay = true;
     public boolean showSpectrum = true;
-    /** 0 = top-left, 1 = top-right, 2 = bottom-left, 3 = bottom-right */
     public int cardCorner = 0;
-    // Lyrics
     public boolean showLyrics = true;
     public boolean showContext = true;
-    /** 0 = Follow (glides after where you look), 1 = Sky (pinned in the world), 2 = Screen (fixed on the HUD) */
-    public int lyricsMode = 0;
-    /** Follow mode: 0 = snappy, 1 = smooth, 2 = floaty */
+    public int lyricsMode = 2;              // 0=Follow, 1=Sky, 2=Screen (floating bar)
     public int followSmooth = 1;
-    /** 0.2 - 1.0 : overall lyrics opacity */
-    public float lyricsOpacity = 0.7f;
-    /** Sky style: fade lyrics out near the middle of the screen so they never cover what you aim at */
+    public float lyricsOpacity = 0.85f;
     public boolean keepCenterClear = true;
-    public float lyricsSize = 1.5f;
+    public float lyricsSize = 1.4f;
     public int lyricsOffsetMs = 0;
-    public int accentColor = 0xFF8AB4F8;
+    public int accentColor = 0xFF9B5DE5;   // nice purple matching the screenshot
+
+    // New features
+    public boolean splitLyrics = false;     // left / right split
+    public int lyricsAlign = 0;             // 0=Center, 1=Left, 2=Right
+    public float lyricsY = 0.78f;           // vertical position (bottom-ish like the image)
+    public boolean fadePrevious = true;     // previous lines fade out
+    public int wordRevealMode = 0;          // 0 = Progressive (one after another), 1 = Whole line (wait)
+    public boolean showSongTitleIntro = true;
+    public boolean glowEnabled = true;
 
     public static void load() {
         try {
-            if (Files.exists(FILE)) I = GSON.fromJson(Files.readString(FILE), Config.class);
-        } catch (Exception e) { I = new Config(); }
+            if (Files.exists(FILE)) {
+                I = GSON.fromJson(Files.readString(FILE), Config.class);
+            }
+        } catch (Exception e) {
+            I = new Config();
+        }
         if (I == null) I = new Config();
     }
 
     public static void save() {
-        try { Files.writeString(FILE, GSON.toJson(I)); } catch (Exception ignored) {}
+        try {
+            Files.writeString(FILE, GSON.toJson(I));
+        } catch (Exception ignored) {}
     }
 }
