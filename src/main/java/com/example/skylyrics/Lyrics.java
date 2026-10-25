@@ -67,6 +67,7 @@ public class Lyrics {
         return idx;
     }
 
+    /** Returns the index of the currently active word inside a line, or -1 */
     public static int wordIndexAt(Line line, long posMs) {
         if (line.words == null || line.words.isEmpty()) return -1;
         int idx = -1;
@@ -80,6 +81,7 @@ public class Lyrics {
     private static void fetch(NowPlaying.Snap s, long gen) {
         try {
             String q = URLEncoder.encode(s.title() + " " + s.artist(), StandardCharsets.UTF_8);
+            // Try LRCLIB first (supports synced + sometimes word level via enhanced)
             String url = "https://lrclib.net/api/search?q=" + q;
             HttpRequest req = HttpRequest.newBuilder(URI.create(url))
                     .timeout(Duration.ofSeconds(10))
@@ -126,6 +128,7 @@ public class Lyrics {
             String text = raw.substring(end).trim();
             if (text.isEmpty()) continue;
 
+            // Try to extract word-level timestamps if present (enhanced LRC)
             List<Word> words = parseWords(text, time);
             String cleanText = text.replaceAll("<\\d{1,3}:\\d{1,2}(?:[.:]\\d{1,3})?>", "").trim();
             result.add(new Line(time, cleanText, words));
@@ -142,6 +145,7 @@ public class Lyrics {
         while (m.find()) {
             String before = text.substring(lastEnd, m.start()).trim();
             if (!before.isEmpty()) {
+                // previous word without timestamp gets estimated
                 words.add(new Word(lastTime, before));
             }
             long t = parseTimestamp(m.group(1), m.group(2), m.group(3));
@@ -153,10 +157,12 @@ public class Lyrics {
             words.add(new Word(lastTime, remaining));
         }
 
+        // If no word timestamps found, create estimated progressive words
         if (words.isEmpty() || words.size() == 1) {
             words.clear();
             String[] parts = text.replaceAll("<[^>]+>", "").trim().split("\\s+");
             if (parts.length == 0) return List.of();
+            // Estimate ~350ms per word as a reasonable karaoke speed
             for (int i = 0; i < parts.length; i++) {
                 words.add(new Word(lineStart + i * 350L, parts[i]));
             }
